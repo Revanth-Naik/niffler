@@ -37,11 +37,12 @@ def _save(df: pd.DataFrame) -> None:
     df.to_csv(LOG_PATH, index=False)
 
 
-def log_predictions(rows: list[dict], for_date: date_cls | None = None) -> None:
+def log_predictions(rows: list[dict], for_date: date_cls | None = None) -> int:
     """Append a batch of pre-market predictions.
 
     Each row: {ticker, prev_close, predicted_pct, predicted_direction, confidence}
-    Skips tickers that already have a row for the given date.
+    Skips tickers that already have a row for the given date. Returns the
+    number of rows actually written (excluding skipped duplicates).
     """
     target_date = for_date or date_cls.today()
     log = load_log()
@@ -69,10 +70,12 @@ def log_predictions(rows: list[dict], for_date: date_cls | None = None) -> None:
         })
 
     if not new_rows:
-        return
+        return 0
 
-    combined = pd.concat([log, pd.DataFrame(new_rows)], ignore_index=True)
+    new_df = pd.DataFrame(new_rows, columns=COLUMNS)
+    combined = new_df if log.empty else pd.concat([log, new_df], ignore_index=True)
     _save(combined)
+    return len(new_rows)
 
 
 def record_actuals(actual_closes: dict[str, float], for_date: date_cls | None = None) -> int:
@@ -85,6 +88,12 @@ def record_actuals(actual_closes: dict[str, float], for_date: date_cls | None = 
     log = load_log()
     if log.empty:
         return 0
+
+    # These columns start out empty (NaN, inferred as float64) until the
+    # first real value lands in them — cast to object first so assigning a
+    # string/bool doesn't trip a pandas dtype-compatibility warning.
+    for col in ("actual_direction", "hit"):
+        log[col] = log[col].astype("object")
 
     mask = (log["date"].dt.date == target_date) & (log["actual_close"].isna())
     updated = 0

@@ -16,11 +16,12 @@ pre-market predictions against post-market actuals.
 Working Streamlit prototype: a transparent heuristic prediction model, an
 optional trained AI model that learns to correct the heuristic's own
 mistakes, a Niffler-themed multi-page dashboard, a top-50 S&P 500 scanner,
-and a predicted-vs-actual accuracy tracker. `web/index.html` is an earlier
-static mockup, kept for reference — the Streamlit app in
-`web/streamlit_app.py` is the real app now.
+and a predicted-vs-actual accuracy tracker.
 
 ## Project structure
+
+Trimmed to exactly what's needed to clone, run, and push — no dead code,
+no superseded mockups, no generated artifacts.
 
 ```
 niffler/
@@ -32,18 +33,10 @@ niffler/
 │   │   ├── ml_model.py    # loads/runs the trained ML correction model
 │   │   ├── predictor.py   # unified entry point: ML if trained, else heuristic
 │   │   ├── universe.py    # S&P 500 ticker list (live fetch + offline fallback)
-│   │   ├── scanner.py     # batch scan helper (yfinance bulk download)
 │   │   └── synthetic.py   # deterministic fallback price series for offline/demo use
 │   ├── tracking/
 │   │   └── logger.py      # predictions_log.csv read/write + accuracy stats
 │   └── config.py          # ticker list + settings
-├── models/
-│   ├── niffler_gbm.joblib      # trained ML model (created by train_model.py)
-│   └── niffler_gbm_meta.json   # training metadata: metrics, feature importances
-├── data/
-│   ├── raw/                        # raw daily pulls (CSV)
-│   ├── processed/predictions_log.csv  # predicted vs. actual history — the core dataset
-│   └── cache/                      # S&P 500 ticker cache + offline fallback list
 ├── scripts/
 │   ├── fetch_daily.py     # pull raw OHLCV data
 │   ├── train_model.py     # train/retrain the AI correction model
@@ -58,10 +51,10 @@ niffler/
 │   │   ├── 3_Accuracy_tracker.py   # hit rate over time, predicted vs actual, error charts
 │   │   └── 4_Model_insights.py     # AI vs heuristic holdout comparison, feature importances
 │   ├── theme.py            # shared Niffler palette, CSS, and themed chart helpers
-│   ├── data_helpers.py     # cached data access with offline fallback
-│   ├── .streamlit/config.toml
-│   └── index.html          # earlier static HTML mockup (superseded, kept for reference)
-├── tests/
+│   └── data_helpers.py     # cached data access with offline fallback
+├── data/                   # raw/, processed/, cache/ — gitignored except .gitkeep + the S&P 500 offline fallback list
+├── models/                 # gitignored — created locally by train_model.py
+├── .streamlit/config.toml  # dashboard theme
 ├── requirements.txt
 └── .env.example
 ```

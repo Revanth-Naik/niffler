@@ -64,8 +64,11 @@ def main() -> None:
         print("No predictions generated.")
         sys.exit(1)
 
-    log_predictions(rows)
-    print(f"Logged {len(rows)} predictions.")
+    written = log_predictions(rows)
+    if written:
+        print(f"Logged {written} new prediction(s).")
+    else:
+        print("Nothing new to log — today's predictions were already recorded.")
 
 
 if __name__ == "__main__":
