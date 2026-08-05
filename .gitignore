@@ -4,5 +4,8 @@ __pycache__/
 .env
 data/raw/*.csv
 data/processed/*.csv
+data/cache/sp500_cache.csv
+models/*.joblib
+models/*.json
 .DS_Store
 *.log

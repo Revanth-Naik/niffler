@@ -20,7 +20,7 @@ from src.ingestion.yfinance_client import fetch_many
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Fetch daily stock data for Nifler.")
+    parser = argparse.ArgumentParser(description="Fetch daily stock data for Niffler.")
     parser.add_argument(
         "--tickers",
         type=str,

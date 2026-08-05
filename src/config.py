@@ -1,4 +1,4 @@
-"""Project-wide settings for Nifler."""
+"""Project-wide settings for Niffler."""
 
 import os
 from pathlib import Path
@@ -10,6 +10,7 @@ load_dotenv()
 ROOT_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_DIR = ROOT_DIR / "data" / "raw"
 PROCESSED_DATA_DIR = ROOT_DIR / "data" / "processed"
+MODEL_DIR = ROOT_DIR / "models"
 
 # Default tickers if none are passed on the command line.
 DEFAULT_TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
