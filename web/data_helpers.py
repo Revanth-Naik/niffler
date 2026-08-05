@@ -41,6 +41,11 @@ def ensure_bootstrap() -> None:
             train_and_save(DEFAULT_TICKERS, period="1y", synthetic=True)
         except NotEnoughDataError:
             pass  # fine — the app runs perfectly well on the heuristic alone
+        except Exception as exc:
+            # Don't swallow unexpected errors silently — surface them so
+            # they're visible instead of just quietly falling back to the
+            # heuristic with no explanation.
+            st.warning(f"Auto-training the demo AI model failed, running on the heuristic instead: {exc!r}")
 
 
 @st.cache_resource(show_spinner=False)

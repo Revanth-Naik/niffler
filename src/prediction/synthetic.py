@@ -4,12 +4,18 @@ Not real market data."""
 
 from __future__ import annotations
 
+import zlib
+
 import numpy as np
 import pandas as pd
 
 
 def synthetic_history(ticker: str, period_days: int = 90) -> pd.DataFrame:
-    seed = abs(hash(ticker)) % (2**32)
+    # Python's built-in hash() is randomized per-process by default (a
+    # security feature, PYTHONHASHSEED) — it is NOT stable across restarts,
+    # which would silently break the "deterministic" guarantee this module
+    # promises. zlib.crc32 is a real, stable hash for this purpose.
+    seed = zlib.crc32(ticker.encode()) % (2**32)
     rng = np.random.default_rng(seed)
     base_price = 50 + (seed % 400)
 
