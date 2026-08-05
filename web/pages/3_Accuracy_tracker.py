@@ -19,10 +19,12 @@ sys.path.insert(0, str(ROOT_DIR))
 import plotly.graph_objects as go
 import streamlit as st
 
+from data_helpers import ensure_bootstrap
 from theme import inject_css, render_header, themed_line_layout, hoard_gauge, GOLD_BRIGHT, EMERALD, MAROON
 from src.tracking.logger import load_log, accuracy_stats
 
 st.set_page_config(page_title="Niffler — accuracy", page_icon=":gem:", layout="wide")
+ensure_bootstrap()
 inject_css()
 render_header("how honest has the hoard been")
 

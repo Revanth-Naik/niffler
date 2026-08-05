@@ -16,13 +16,14 @@ sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
 
-from data_helpers import get_watchlist_predictions
+from data_helpers import ensure_bootstrap, get_watchlist_predictions
 from theme import inject_css, render_header, render_prediction_card, render_whisper, hoard_gauge
 from src.config import DEFAULT_TICKERS
 from src.prediction.ml_model import is_available as ml_is_available
 from src.tracking.logger import load_log, accuracy_stats
 
 st.set_page_config(page_title="Niffler", page_icon=":gem:", layout="wide")
+ensure_bootstrap()
 inject_css()
 render_header()
 

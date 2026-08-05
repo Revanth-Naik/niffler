@@ -13,11 +13,8 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from src.config import MODEL_DIR
 from src.prediction.features import latest_feature_row
-
-MODEL_PATH = MODEL_DIR / "niffler_gbm.joblib"
-META_PATH = MODEL_DIR / "niffler_gbm_meta.json"
+from src.prediction.train import MODEL_PATH, META_PATH
 
 
 def is_available() -> bool:

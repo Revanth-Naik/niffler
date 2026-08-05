@@ -12,11 +12,35 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
+from src.config import DEFAULT_TICKERS
 from src.prediction.ml_model import is_available as ml_is_available
 from src.prediction.ml_model import load_meta as ml_load_meta
 from src.prediction.ml_model import load_model as ml_load_model
 from src.prediction.predictor import predict as run_prediction
 from src.prediction.synthetic import synthetic_history as _synthetic_history
+from src.prediction.train import NotEnoughDataError, train_and_save
+from src.tracking.demo_seed import seed_demo_log
+from src.tracking.logger import LOG_PATH
+
+
+@st.cache_resource(show_spinner=False)
+def ensure_bootstrap() -> None:
+    """Runs once per app process (cached — safe to call from every page).
+
+    On a fresh deploy with an empty filesystem (Streamlit Community Cloud
+    resets storage on every restart), there's no predictions log and no
+    trained model yet — this generates a demo version of both, the same
+    way seed_demo_data.py / train_model.py --synthetic do locally, so the
+    app isn't blank on first load. No-ops if real data already exists.
+    """
+    if not LOG_PATH.exists():
+        seed_demo_log()
+
+    if not ml_is_available():
+        try:
+            train_and_save(DEFAULT_TICKERS, period="1y", synthetic=True)
+        except NotEnoughDataError:
+            pass  # fine — the app runs perfectly well on the heuristic alone
 
 
 @st.cache_resource(show_spinner=False)

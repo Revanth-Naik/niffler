@@ -13,11 +13,12 @@ sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
 
-from data_helpers import scan_universe
+from data_helpers import ensure_bootstrap, scan_universe
 from theme import inject_css, render_header
 from src.prediction.universe import get_sp500_tickers
 
 st.set_page_config(page_title="Niffler — top 50", page_icon=":gem:", layout="wide")
+ensure_bootstrap()
 inject_css()
 render_header("where the hoard is growing fastest")
 

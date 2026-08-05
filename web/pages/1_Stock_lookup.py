@@ -14,11 +14,12 @@ sys.path.insert(0, str(ROOT_DIR))
 import plotly.graph_objects as go
 import streamlit as st
 
-from data_helpers import get_prediction
+from data_helpers import ensure_bootstrap, get_prediction
 from theme import inject_css, render_header, render_prediction_card, themed_line_layout, GOLD_BRIGHT, EMERALD
 from src.tracking.logger import load_log
 
 st.set_page_config(page_title="Niffler — stock lookup", page_icon=":gem:", layout="wide")
+ensure_bootstrap()
 inject_css()
 render_header("check any creature's scent")
 
