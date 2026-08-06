@@ -53,9 +53,9 @@ niffler/
 │   │   ├── 1_Stock_lookup.py       # search any ticker, live prediction + its track record
 │   │   ├── 2_Top_50_predictions.py # S&P 500 scan, ranked by predicted return
 │   │   ├── 3_Accuracy_tracker.py   # hit rate over time, predicted vs actual, error charts
-│   │   ├── 4_Model_insights.py     # AI vs heuristic holdout comparison, feature importances
-│   │   └── 5_Ask_Dumbledore.py     # chat with the in-app guide
+│   │   └── 4_Model_insights.py     # AI vs heuristic holdout comparison, feature importances
 │   ├── theme.py            # shared Niffler palette, CSS, and themed chart helpers
+│   ├── dumbledore_widget.py # floating chat widget, rendered on every page
 │   └── data_helpers.py     # cached data access with offline fallback
 ├── data/                   # raw/, processed/, cache/ — gitignored except .gitkeep + the S&P 500 offline fallback list
 ├── models/                 # gitignored — created locally by train_model.py
@@ -121,14 +121,15 @@ python scripts/train_model.py --limit 30 --period 2y   # smaller/larger universe
 
 ## Dumbledore — the in-app guide
 
-`src/chatbot/dumbledore.py` + the **Ask Dumbledore** page. Free and fully
-local — no external AI API, no cost, no API key — so it isn't a real
-language model. It's pattern matching over the question plus retrieval
-from Niffler's own data (live predictions, the accuracy log, the trained
-model's stats), filled into templates. It can explain why a ticker's
-prediction looks the way it does, report accuracy/hit rate (overall or
-per-ticker), explain terms like RSI or momentum, and describe how the AI
-model was trained.
+`src/chatbot/dumbledore.py` (the logic) + `web/dumbledore_widget.py` (the
+UI) — a floating chat bubble pinned to the bottom-right corner on every
+page, not a separate page of its own. Free and fully local — no external
+AI API, no cost, no API key — so it isn't a real language model. It's
+pattern matching over the question plus retrieval from Niffler's own data
+(live predictions, the accuracy log, the trained model's stats), filled
+into templates. It can explain why a ticker's prediction looks the way it
+does, report accuracy/hit rate (overall or per-ticker), explain terms like
+RSI or momentum, and describe how the AI model was trained.
 
 It deliberately does **not** answer "should I buy/sell" questions. This
 app is deployed at a public URL, so a bot dispensing "sell now for profit"
@@ -154,9 +155,10 @@ cp .env.example .env   # fill in ALPHAVANTAGE_API_KEY if using it
 streamlit run web/streamlit_app.py
 ```
 
-Opens at `http://localhost:8501` with five pages in the sidebar: stock
-lookup, top 50 predictions, the accuracy tracker, model insights, and
-Ask Dumbledore.
+Opens at `http://localhost:8501` with four pages in the sidebar (stock
+lookup, top 50 predictions, the accuracy tracker, model insights) plus
+Dumbledore, a floating chat widget in the bottom-right corner on every
+page.
 
 First time setup:
 

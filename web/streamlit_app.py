@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT_DIR))
 import streamlit as st
 
 from data_helpers import ensure_bootstrap, get_watchlist_predictions
+from dumbledore_widget import render_floating_widget
 from theme import inject_css, render_header, render_prediction_card, render_whisper, hoard_gauge
 from src.config import DEFAULT_TICKERS
 from src.prediction.ml_model import is_available as ml_is_available
@@ -26,6 +27,7 @@ st.set_page_config(page_title="Niffler", page_icon=":gem:", layout="wide")
 ensure_bootstrap()
 inject_css()
 render_header()
+render_floating_widget()
 
 if ml_is_available():
     st.caption("The AI correction model is active — predictions below are its output, not just the raw heuristic. See **Model insights** in the sidebar.")

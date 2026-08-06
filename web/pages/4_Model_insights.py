@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data_helpers import ensure_bootstrap
+from dumbledore_widget import render_floating_widget
 from theme import inject_css, render_header, themed_line_layout, GOLD_BRIGHT, EMERALD
 from src.prediction.ml_model import is_available, load_meta
 from src.tracking.logger import load_log
@@ -26,6 +27,7 @@ st.set_page_config(page_title="Niffler — model insights", page_icon=":gem:", l
 ensure_bootstrap()
 inject_css()
 render_header("what's under the hood")
+render_floating_widget()
 
 if not is_available():
     st.info(

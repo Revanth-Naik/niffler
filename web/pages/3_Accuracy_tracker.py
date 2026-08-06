@@ -20,6 +20,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data_helpers import ensure_bootstrap
+from dumbledore_widget import render_floating_widget
 from theme import inject_css, render_header, themed_line_layout, hoard_gauge, GOLD_BRIGHT, EMERALD, MAROON
 from src.tracking.logger import load_log, accuracy_stats
 
@@ -27,6 +28,7 @@ st.set_page_config(page_title="Niffler — accuracy", page_icon=":gem:", layout=
 ensure_bootstrap()
 inject_css()
 render_header("how honest has the hoard been")
+render_floating_widget()
 
 log = load_log()
 resolved = log.dropna(subset=["hit"]).sort_values("date")

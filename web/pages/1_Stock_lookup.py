@@ -15,6 +15,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from data_helpers import ensure_bootstrap, get_prediction
+from dumbledore_widget import render_floating_widget
 from theme import inject_css, render_header, render_prediction_card, themed_line_layout, GOLD_BRIGHT, EMERALD
 from src.tracking.logger import load_log
 
@@ -22,6 +23,7 @@ st.set_page_config(page_title="Niffler — stock lookup", page_icon=":gem:", lay
 ensure_bootstrap()
 inject_css()
 render_header("check any creature's scent")
+render_floating_widget()
 
 ticker = st.text_input("Ticker", value="AAPL", placeholder="e.g. TSLA").strip().upper()
 period = st.select_slider("History window", options=["1mo", "3mo", "6mo", "1y"], value="3mo")

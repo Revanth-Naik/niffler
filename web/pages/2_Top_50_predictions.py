@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT_DIR))
 import streamlit as st
 
 from data_helpers import ensure_bootstrap, scan_universe
+from dumbledore_widget import render_floating_widget
 from theme import inject_css, render_header
 from src.prediction.universe import get_sp500_tickers
 
@@ -21,6 +22,7 @@ st.set_page_config(page_title="Niffler — top 50", page_icon=":gem:", layout="w
 ensure_bootstrap()
 inject_css()
 render_header("where the hoard is growing fastest")
+render_floating_widget()
 
 st.caption(
     "Predicted next-session return across the S&P 500, ranked highest to lowest. "
