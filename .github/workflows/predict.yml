@@ -1,0 +1,41 @@
+name: Daily predictions
+
+# Runs before US market open on weekdays and logs today's predictions for
+# DEFAULT_TICKERS, then commits the updated log so the live Streamlit app
+# picks it up on its next redeploy.
+#
+# 13:00 UTC = 9:00am EDT / 8:00am EST — before the 9:30am open either way.
+on:
+  schedule:
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - run: pip install -r requirements.txt
+
+      - run: python scripts/run_predictions.py
+
+      - name: Commit and push if the log changed
+        run: |
+          git config user.name "niffler-bot"
+          git config user.email "niffler-bot@users.noreply.github.com"
+          git add -f data/processed/predictions_log.csv
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Log predictions for $(date -u +%Y-%m-%d)"
+            git push
+          fi

@@ -113,9 +113,28 @@ python scripts/train_model.py --limit 30 --period 1y
 
 This scans real tickers via yfinance (takes a minute or two) and replaces the demo model with one trained on live history. Re-run this weekly or so — check the **Model insights** page in the app to see whether it's actually beating the plain heuristic before trusting it.
 
-## 10. (Optional) Automate the daily loop
+## 10. Automate the daily loop (recommended: GitHub Actions)
 
-macOS/Linux, via cron:
+This is already set up in `.github/workflows/` — once your repo is on
+GitHub, three scheduled jobs run the daily loop for you (no laptop, no
+manual runs): predictions before market open, actuals after close, and a
+weekly retrain, each committing its results back to the repo so the live
+Streamlit Cloud app stays current.
+
+**One thing to turn on:** GitHub → your repo → Settings → Actions →
+General → Workflow permissions → select "Read and write permissions" →
+Save. Without this, the workflows can run the scripts but can't push the
+results (403 on the commit-and-push step).
+
+That's it — check the **Actions** tab on GitHub after the next scheduled
+time to see them run, or click into any of the three workflows and hit
+"Run workflow" to trigger one immediately instead of waiting.
+
+### Alternative: cron on your own machine
+
+Only relevant if you'd rather run this locally instead of via GitHub
+Actions (e.g. your machine is always on and you don't want to rely on
+GitHub's scheduler):
 
 ```bash
 crontab -e
@@ -128,7 +147,7 @@ Add two lines (adjust the path and times — these are in your local timezone, a
 5 16 * * 1-5  cd /path/to/niffler && .venv/bin/python scripts/record_actuals.py
 ```
 
-If you'd rather not deal with cron, ask me — this is also something a scheduled task in Cowork can trigger.
+This only runs while your machine is on and awake — GitHub Actions doesn't have that limitation, which is why it's the default here.
 
 ## Troubleshooting
 

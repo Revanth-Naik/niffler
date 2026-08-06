@@ -1,0 +1,39 @@
+name: Weekly retrain
+
+# Retrains the AI correction model on real market data once a week (Sunday,
+# when the market's closed and there's a fresh week of history since the
+# last run) and commits the updated model so it ships with the next deploy.
+on:
+  schedule:
+    - cron: "0 12 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - run: pip install -r requirements.txt
+
+      - run: python scripts/train_model.py --limit 40 --period 1y
+
+      - name: Commit and push if the model changed
+        run: |
+          git config user.name "niffler-bot"
+          git config user.email "niffler-bot@users.noreply.github.com"
+          git add -f models/niffler_gbm.joblib models/niffler_gbm_meta.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Retrain AI model — $(date -u +%Y-%m-%d)"
+            git push
+          fi

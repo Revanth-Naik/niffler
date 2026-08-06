@@ -25,6 +25,7 @@ no superseded mockups, no generated artifacts.
 
 ```
 niffler/
+├── .github/workflows/      # scheduled predict/resolve/retrain jobs — see Automation below
 ├── src/
 │   ├── ingestion/         # data source clients (yfinance, optional Alpha Vantage)
 │   ├── prediction/
@@ -154,8 +155,34 @@ python scripts/record_actuals.py     # run after market close
 Running these daily builds up real predicted-vs-actual history in
 `data/processed/predictions_log.csv`, which powers the accuracy tracker,
 the home page's hoard meter, and — once you retrain on it — the AI model.
-(See "Scheduled daily runs" in the roadmap — these, plus periodic
-retraining, are natural candidates for a cron job or a scheduled task.)
+
+You don't have to run these by hand — see "Automation" below.
+
+## Automation
+
+Three scheduled GitHub Actions workflows in `.github/workflows/` run the
+daily loop for you, on GitHub's servers, and commit the results back to the
+repo so the live Streamlit Cloud app picks them up automatically:
+
+| Workflow | Schedule (UTC, weekdays unless noted) | Runs |
+|---|---|---|
+| `predict.yml` | 13:00, Mon–Fri | `run_predictions.py` |
+| `resolve.yml` | 21:30, Mon–Fri | `record_actuals.py` |
+| `retrain.yml` | 12:00, Sunday | `train_model.py --limit 40 --period 1y` |
+
+Each job installs dependencies, runs its script, and — only if the output
+actually changed — commits and pushes using the repo's built-in
+`GITHUB_TOKEN` (no personal access token needed).
+
+**One-time setup:** on GitHub, go to your repo → Settings → Actions →
+General → Workflow permissions, and select "Read and write permissions."
+Without this the commit-and-push step fails with a 403, since the default
+token is read-only.
+
+You can also trigger any of the three manually from the Actions tab
+("Run workflow" button) instead of waiting for the schedule. Times are
+fixed UTC — chosen with a buffer so they land before/after market hours
+across both EDT and EST.
 
 ## Roadmap
 
@@ -166,9 +193,11 @@ retraining, are natural candidates for a cron job or a scheduled task.)
 - [x] Predicted-vs-actual logging loop
 - [x] AI correction model trained on technical features + heuristic output
 - [x] Model insights page (honest AI vs heuristic comparison)
+- [x] Scheduled daily runs + scheduled retraining (GitHub Actions)
+- [x] Deploy somewhere reachable outside localhost (Streamlit Community Cloud)
 - [ ] Optional Alpha Vantage news/sentiment ingestion
-- [ ] Scheduled daily runs + scheduled retraining (cron / task scheduler)
-- [ ] Deploy somewhere reachable outside localhost
+- [ ] Real data persistence for the live deployment (a small database instead of ephemeral CSV/joblib files)
+- [ ] AI chatbot for plain-English Q&A on predictions/tickers
 
 ## Disclaimer
 

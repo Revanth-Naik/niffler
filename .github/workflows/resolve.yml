@@ -1,0 +1,41 @@
+name: Daily actuals
+
+# Runs after US market close on weekdays and records today's actual closes
+# against this morning's predictions, then commits the result.
+#
+# 21:30 UTC = 5:30pm EDT / 4:30pm EST — after the 4:00pm close either way,
+# with a half-hour buffer for close prices to settle.
+on:
+  schedule:
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - run: pip install -r requirements.txt
+
+      - run: python scripts/record_actuals.py
+
+      - name: Commit and push if the log changed
+        run: |
+          git config user.name "niffler-bot"
+          git config user.email "niffler-bot@users.noreply.github.com"
+          git add -f data/processed/predictions_log.csv
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Record actuals for $(date -u +%Y-%m-%d)"
+            git push
+          fi
