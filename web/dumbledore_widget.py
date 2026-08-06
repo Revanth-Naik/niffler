@@ -35,7 +35,7 @@ def _inject_widget_css() -> None:
         div.st-key-{WIDGET_KEY} {{
             position: fixed;
             right: 22px;
-            bottom: 22px;
+            bottom: 68px;
             z-index: 9999;
             width: auto !important;
         }}
