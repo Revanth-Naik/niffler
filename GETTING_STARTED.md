@@ -74,7 +74,7 @@ First command backfills ~60 days of demo predicted-vs-actual history per watchli
 streamlit run web/streamlit_app.py
 ```
 
-Opens your browser to `http://localhost:8501` automatically. If it doesn't, open that URL yourself. Four pages in the left sidebar: home, stock lookup, top 50 predictions, accuracy tracker, and model insights.
+Opens your browser to `http://localhost:8501` automatically. If it doesn't, open that URL yourself. Five pages in the left sidebar: home, stock lookup, top 50 predictions, accuracy tracker, model insights, and Ask Dumbledore (a free, local chatbot that explains predictions and accuracy — no API key needed).
 
 To stop it: go back to Terminal and press `Ctrl+C`.
 

@@ -16,7 +16,8 @@ pre-market predictions against post-market actuals.
 Working Streamlit prototype: a transparent heuristic prediction model, an
 optional trained AI model that learns to correct the heuristic's own
 mistakes, a Niffler-themed multi-page dashboard, a top-50 S&P 500 scanner,
-and a predicted-vs-actual accuracy tracker.
+a predicted-vs-actual accuracy tracker, and Dumbledore — an in-app guide
+you can ask about any of it.
 
 ## Project structure
 
@@ -37,6 +38,8 @@ niffler/
 │   │   └── synthetic.py   # deterministic fallback price series for offline/demo use
 │   ├── tracking/
 │   │   └── logger.py      # predictions_log.csv read/write + accuracy stats
+│   ├── chatbot/
+│   │   └── dumbledore.py  # in-app guide — free, local, template-based (no external AI API)
 │   └── config.py          # ticker list + settings
 ├── scripts/
 │   ├── fetch_daily.py     # pull raw OHLCV data
@@ -50,7 +53,8 @@ niffler/
 │   │   ├── 1_Stock_lookup.py       # search any ticker, live prediction + its track record
 │   │   ├── 2_Top_50_predictions.py # S&P 500 scan, ranked by predicted return
 │   │   ├── 3_Accuracy_tracker.py   # hit rate over time, predicted vs actual, error charts
-│   │   └── 4_Model_insights.py     # AI vs heuristic holdout comparison, feature importances
+│   │   ├── 4_Model_insights.py     # AI vs heuristic holdout comparison, feature importances
+│   │   └── 5_Ask_Dumbledore.py     # chat with the in-app guide
 │   ├── theme.py            # shared Niffler palette, CSS, and themed chart helpers
 │   └── data_helpers.py     # cached data access with offline fallback
 ├── data/                   # raw/, processed/, cache/ — gitignored except .gitkeep + the S&P 500 offline fallback list
@@ -115,6 +119,25 @@ python scripts/train_model.py                   # real data — scans S&P 500, t
 python scripts/train_model.py --limit 30 --period 2y   # smaller/larger universe, longer history
 ```
 
+## Dumbledore — the in-app guide
+
+`src/chatbot/dumbledore.py` + the **Ask Dumbledore** page. Free and fully
+local — no external AI API, no cost, no API key — so it isn't a real
+language model. It's pattern matching over the question plus retrieval
+from Niffler's own data (live predictions, the accuracy log, the trained
+model's stats), filled into templates. It can explain why a ticker's
+prediction looks the way it does, report accuracy/hit rate (overall or
+per-ticker), explain terms like RSI or momentum, and describe how the AI
+model was trained.
+
+It deliberately does **not** answer "should I buy/sell" questions. This
+app is deployed at a public URL, so a bot dispensing "sell now for profit"
+calls would be unlicensed personalized financial advice reaching whoever
+opens the link — not just you. It declines those with an explanation and
+redirects to what it can honestly answer instead, keeping the same
+"transparent, not overselling itself" character as the Model insights
+page and the disclaimer below.
+
 ## Setup
 
 ```bash
@@ -131,8 +154,9 @@ cp .env.example .env   # fill in ALPHAVANTAGE_API_KEY if using it
 streamlit run web/streamlit_app.py
 ```
 
-Opens at `http://localhost:8501` with four pages in the sidebar: stock
-lookup, top 50 predictions, the accuracy tracker, and model insights.
+Opens at `http://localhost:8501` with five pages in the sidebar: stock
+lookup, top 50 predictions, the accuracy tracker, model insights, and
+Ask Dumbledore.
 
 First time setup:
 
@@ -195,9 +219,9 @@ across both EDT and EST.
 - [x] Model insights page (honest AI vs heuristic comparison)
 - [x] Scheduled daily runs + scheduled retraining (GitHub Actions)
 - [x] Deploy somewhere reachable outside localhost (Streamlit Community Cloud)
+- [x] AI chatbot (Dumbledore) for plain-English Q&A on predictions/tickers
 - [ ] Optional Alpha Vantage news/sentiment ingestion
 - [ ] Real data persistence for the live deployment (a small database instead of ephemeral CSV/joblib files)
-- [ ] AI chatbot for plain-English Q&A on predictions/tickers
 
 ## Disclaimer
 
