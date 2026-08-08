@@ -92,13 +92,20 @@ def log_predictions(rows: list[dict], for_date: date_cls | None = None) -> int:
     return len(new_rows)
 
 
-def record_actuals(actual_closes: dict[str, float], for_date: date_cls | None = None) -> int:
-    """Fill in actual outcomes for a date's logged predictions.
+def record_actuals(actual_closes: dict[tuple[str, date_cls], float]) -> int:
+    """Fill in actual outcomes for logged predictions.
 
-    actual_closes: {ticker: closing_price}
-    Returns the number of rows updated.
+    actual_closes: {(ticker, prediction_date): closing_price}
+
+    Deliberately resolves ANY pending row that has a matching entry —
+    not just ones dated today. Earlier versions only ever looked at
+    "today's" pending predictions, which meant a single failed/missed
+    resolve run (e.g. a workflow bug, a transient outage) permanently
+    orphaned that day's predictions, since the next run would only ever
+    check the new "today" again. Keying by (ticker, date) instead lets a
+    late or catch-up run backfill anything still pending, regardless of
+    how long it's been waiting. Returns the number of rows updated.
     """
-    target_date = for_date or date_cls.today()
     log = load_log()
     if log.empty:
         return 0
@@ -109,15 +116,13 @@ def record_actuals(actual_closes: dict[str, float], for_date: date_cls | None = 
     for col in ("actual_direction", "hit"):
         log[col] = log[col].astype("object")
 
-    mask = (log["date"].dt.date == target_date) & (log["actual_close"].isna())
     updated = 0
-
-    for idx in log[mask].index:
-        ticker = log.at[idx, "ticker"]
-        if ticker not in actual_closes:
+    for idx in log[log["actual_close"].isna()].index:
+        key = (log.at[idx, "ticker"], log.at[idx, "date"].date())
+        if key not in actual_closes:
             continue
         prev_close = log.at[idx, "prev_close"]
-        actual_close = actual_closes[ticker]
+        actual_close = actual_closes[key]
         actual_pct = round(((actual_close - prev_close) / prev_close) * 100, 2) if prev_close else None
         actual_direction = "up" if actual_pct and actual_pct > 0.05 else "down" if actual_pct and actual_pct < -0.05 else "flat"
         predicted_direction = log.at[idx, "predicted_direction"]

@@ -225,6 +225,10 @@ You can also trigger any of the three manually from the Actions tab
 fixed UTC — chosen with a buffer so they land before/after market hours
 across both EDT and EST.
 
+`record_actuals.py` resolves *any* pending prediction, not just today's —
+if a run is ever missed (an outage, a bug), the next successful run
+backfills it automatically instead of leaving it stuck unresolved forever.
+
 ## Roadmap
 
 - [x] Project scaffold + git setup
