@@ -26,13 +26,27 @@ COLUMNS = [
 def load_log() -> pd.DataFrame:
     if not LOG_PATH.exists():
         return pd.DataFrame(columns=COLUMNS)
-    log = pd.read_csv(LOG_PATH, parse_dates=["date"])
+    # date_format="ISO8601" tolerates a mix of "YYYY-MM-DD" and
+    # "YYYY-MM-DD HH:MM:SS" in the same column — both are valid ISO8601,
+    # just different precision. Without this, a single mixed-precision CSV
+    # (which _save() used to produce before this fix) makes pandas give up
+    # and leave the whole column as strings, silently breaking every
+    # .dt accessor call downstream with "Can only use .dt accessor with
+    # datetimelike values".
+    log = pd.read_csv(LOG_PATH, parse_dates=["date"], date_format="ISO8601")
     if "source" not in log.columns:
         log["source"] = "heuristic"  # backfill for logs written before the ML model existed
     return log
 
 
 def _save(df: pd.DataFrame) -> None:
+    df = df.copy()
+    if "date" in df.columns:
+        # Always write a single consistent date-only format ("YYYY-MM-DD"),
+        # regardless of whether "date" currently holds datetime64 values,
+        # raw datetime.date objects, or (after a pd.concat of the two)
+        # mixed types — this is what caused the mixed-precision bug above.
+        df["date"] = pd.to_datetime(df["date"], format="ISO8601").dt.strftime("%Y-%m-%d")
     PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(LOG_PATH, index=False)
 
