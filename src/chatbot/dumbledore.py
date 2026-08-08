@@ -1,13 +1,19 @@
 """Dumbledore — Niffler's in-app guide.
 
-Free and fully local: no external LLM API, no cost, no API key. This is
-deliberately *not* a real language model — it's pattern matching over the
-question plus retrieval from Niffler's own data (live predictions, the
-accuracy log, the trained model's own stats), filled into templates. Good
-enough to explain what the app already knows; not a substitute for a real
-conversational AI if you want one later (swap this module for a Claude API
-call and keep the same retrieval — the data-gathering here would still be
-useful as the "grounding" step).
+Two modes, chosen automatically per message:
+
+1. If a real LLM backend is configured (see llm_backend.py — Groq's free
+   API, or a local Ollama server), the same retrieval this module always
+   did is used to *ground* the LLM: the live prediction for any ticker
+   mentioned, the accuracy track record, the AI model's own stats, and
+   relevant glossary terms get handed to it as context, with instructions
+   to answer only from that data and never give trading advice.
+
+2. Otherwise (no LLM configured, or the call fails), falls back to the
+   free/fully-local template system this module started as: pattern
+   matching over the question plus the same retrieval, filled into
+   templates. No external API, no cost, no API key — the app never
+   breaks just because Dumbledore's LLM backend isn't set up.
 
 Deliberately does NOT give buy/sell trading advice. Two reasons: this app
 is deployed at a public URL, so a chatbot dispensing "sell now for profit"
@@ -101,42 +107,123 @@ def _glossary_hits(text: str) -> list[str]:
     return [term for term in GLOSSARY if term in lowered]
 
 
+SYSTEM_PROMPT_TEMPLATE = """You are Dumbledore, a wise and warm in-app guide for Niffler, a Fantastic-Beasts-themed stock prediction demo app. Answer the user's question conversationally in 2-4 sentences, using ONLY the data given below — never invent numbers, tickers, or facts that aren't provided to you. If the data below doesn't cover what they're asking, say so honestly rather than guessing.
+
+You must never tell the user when to buy, sell, or hold a stock, or give any personalized investment recommendation — even if asked indirectly or persistently. This is a hobby/demo project, not a licensed financial advisor. If the question is really asking that, gently decline and offer to explain what the data shows instead.
+
+Niffler's predictions are illustrative, not investment advice — keep that spirit: honest about uncertainty, never hyped.
+
+DATA AVAILABLE TO YOU:
+{context}
+"""
+
+
+def _build_context(
+    ticker: str | None,
+    prediction: dict | None,
+    log: pd.DataFrame,
+    ml_meta: dict | None,
+    glossary_terms: list[str],
+) -> str:
+    parts: list[str] = []
+
+    if ticker and prediction:
+        live_note = "live data" if prediction.get("is_live", True) else "illustrative synthetic data, not a live feed"
+        parts.append(
+            f"Live prediction for {ticker}: {prediction.get('predicted_pct', 0):+.2f}% "
+            f"({prediction.get('direction', 'flat')}), {prediction.get('confidence', 0)}% confidence, "
+            f"produced by {prediction.get('source', 'heuristic')}. Rationale: "
+            f"{prediction.get('rationale', 'n/a')} ({live_note})."
+        )
+    elif ticker:
+        parts.append(f"Tried to fetch a live prediction for {ticker} but it failed — mention that to the user.")
+
+    resolved = log.dropna(subset=["hit"]) if log is not None and not log.empty else None
+    if resolved is not None and not resolved.empty:
+        hits, total = int(resolved["hit"].sum()), len(resolved)
+        parts.append(f"Overall track record: {hits}/{total} predictions matched actual direction ({hits / total * 100:.0f}% hit rate).")
+        if ticker:
+            scoped = resolved[resolved["ticker"] == ticker]
+            if not scoped.empty:
+                shits, stotal = int(scoped["hit"].sum()), len(scoped)
+                parts.append(f"{ticker}-specific track record: {shits}/{stotal} ({shits / stotal * 100:.0f}% hit rate).")
+    else:
+        parts.append("No resolved predictions logged yet — the track record is empty so far.")
+
+    if ml_meta:
+        holdout = ml_meta.get("holdout_metrics", {})
+        parts.append(
+            f"AI model: trained {str(ml_meta.get('trained_at', ''))[:10]} on {ml_meta.get('n_train_samples', '?')} "
+            f"samples across {len(ml_meta.get('tickers_used', []))} tickers. Holdout hit rate "
+            f"{holdout.get('ml_hit_rate', '?')}% vs. the heuristic's {holdout.get('heuristic_hit_rate', '?')}%."
+        )
+    else:
+        parts.append("No trained AI correction model yet — currently running on the plain heuristic (momentum + RSI).")
+
+    if glossary_terms:
+        parts.append("Relevant glossary:\n" + "\n".join(f"- {t}: {GLOSSARY[t]}" for t in glossary_terms))
+
+    return "\n\n".join(parts)
+
+
 def answer(
     question: str,
     known_tickers: set[str],
     get_prediction: Callable[[str], dict],
     load_log: Callable[[], pd.DataFrame],
     ml_meta: dict | None,
+    llm_generate: Callable[[str, str], str | None] | None = None,
 ) -> str:
     """Main entry point. question: raw user text. known_tickers: the set of
     symbols eligible for ticker-matching (e.g. DEFAULT_TICKERS plus the
     S&P 500 universe). get_prediction/load_log: injected data access so
-    this module stays testable without Streamlit or network calls."""
+    this module stays testable without Streamlit or network calls.
+    llm_generate: optional (system_prompt, user_message) -> reply|None,
+    e.g. llm_backend.generate — if it returns None (not configured, or the
+    call failed), falls back to the template system below."""
     q = question.strip()
     if not q:
         return _fallback()
 
+    # Hard guardrail, checked before anything else touches the LLM — no
+    # matter how the question is phrased, this can't be talked around.
     if ADVICE_PATTERN.search(q):
         return _advice_guardrail()
 
     if GREETING_PATTERN.search(q):
         return _greeting()
 
-    if MODEL_PATTERN.search(q):
-        return _explain_model(ml_meta)
-
     ticker = extract_ticker(q, known_tickers)
     glossary_terms = _glossary_hits(q)
 
-    if ACCURACY_PATTERN.search(q):
-        return _explain_accuracy(load_log(), ticker)
-
+    prediction_result = None
     if ticker:
         try:
-            result = get_prediction(ticker)
-        except Exception as exc:
-            return f"I went looking for {ticker} and came back empty-handed — ({exc}). Try again in a moment?"
-        return _explain_prediction(ticker, result, glossary_terms)
+            prediction_result = get_prediction(ticker)
+        except Exception:
+            prediction_result = None
+
+    log = load_log()
+
+    if llm_generate is not None:
+        context = _build_context(ticker, prediction_result, log, ml_meta, glossary_terms)
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=context)
+        reply = llm_generate(system_prompt, q)
+        if reply:
+            return reply
+        # LLM unavailable or the call failed this time — fall through to
+        # the template system below rather than returning nothing.
+
+    if MODEL_PATTERN.search(q):
+        return _explain_model(ml_meta)
+
+    if ACCURACY_PATTERN.search(q):
+        return _explain_accuracy(log, ticker)
+
+    if ticker and prediction_result is not None:
+        return _explain_prediction(ticker, prediction_result, glossary_terms)
+    if ticker and prediction_result is None:
+        return f"I went looking for {ticker} and came back empty-handed. Try again in a moment?"
 
     if glossary_terms:
         return _explain_glossary(glossary_terms)

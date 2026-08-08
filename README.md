@@ -39,7 +39,8 @@ niffler/
 │   ├── tracking/
 │   │   └── logger.py      # predictions_log.csv read/write + accuracy stats
 │   ├── chatbot/
-│   │   └── dumbledore.py  # in-app guide — free, local, template-based (no external AI API)
+│   │   ├── dumbledore.py    # in-app guide — templates by default, or a real LLM if configured
+│   │   └── llm_backend.py   # optional: Groq (cloud, free tier) or Ollama (local only)
 │   └── config.py          # ticker list + settings
 ├── scripts/
 │   ├── fetch_daily.py     # pull raw OHLCV data
@@ -123,21 +124,35 @@ python scripts/train_model.py --limit 30 --period 2y   # smaller/larger universe
 
 `src/chatbot/dumbledore.py` (the logic) + `web/dumbledore_widget.py` (the
 UI) — a floating chat bubble pinned to the bottom-right corner on every
-page, not a separate page of its own. Free and fully local — no external
-AI API, no cost, no API key — so it isn't a real language model. It's
-pattern matching over the question plus retrieval from Niffler's own data
-(live predictions, the accuracy log, the trained model's stats), filled
-into templates. It can explain why a ticker's prediction looks the way it
-does, report accuracy/hit rate (overall or per-ticker), explain terms like
-RSI or momentum, and describe how the AI model was trained.
+page, not a separate page of its own. It can explain why a ticker's
+prediction looks the way it does, report accuracy/hit rate (overall or
+per-ticker), explain terms like RSI or momentum, and describe how the AI
+model was trained — grounded in Niffler's own live data, not invented.
 
-It deliberately does **not** answer "should I buy/sell" questions. This
-app is deployed at a public URL, so a bot dispensing "sell now for profit"
-calls would be unlicensed personalized financial advice reaching whoever
-opens the link — not just you. It declines those with an explanation and
-redirects to what it can honestly answer instead, keeping the same
-"transparent, not overselling itself" character as the Model insights
-page and the disclaimer below.
+**Two modes, chosen automatically:**
+
+- **No setup (default):** free and fully local — no external AI API, no
+  cost, no API key. Pattern matching over the question plus the same
+  retrieval, filled into templates. Not a real language model, but the
+  app never breaks because of it.
+- **With a real LLM (optional):** set `GROQ_API_KEY` (`.env` locally, or
+  as a root-level entry in Streamlit Cloud's "Secrets" settings for the
+  deployed app — [free tier](https://console.groq.com), no credit card)
+  and Dumbledore's answers come from an actual model instead, still fed
+  only the same retrieved data as context so it can't invent numbers.
+  A local [Ollama](https://ollama.com) server works too (`OLLAMA_HOST`),
+  but only for local runs — Streamlit Community Cloud can't host a
+  background Ollama process, which is why Groq (a plain HTTPS API) is the
+  one that also works on the live deployed app. See `.env.example`.
+
+It deliberately does **not** answer "should I buy/sell" questions, in
+either mode — this is checked before the question ever reaches an LLM, so
+it can't be talked around by rephrasing. This app is deployed at a public
+URL, so a bot dispensing "sell now for profit" calls would be unlicensed
+personalized financial advice reaching whoever opens the link — not just
+you. It declines those with an explanation and redirects to what it can
+honestly answer instead, keeping the same "transparent, not overselling
+itself" character as the Model insights page and the disclaimer below.
 
 ## Setup
 

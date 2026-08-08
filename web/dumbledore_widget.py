@@ -16,10 +16,17 @@ from __future__ import annotations
 import streamlit as st
 
 from data_helpers import get_ml_model, get_prediction
+from src.chatbot import llm_backend
 from src.chatbot.dumbledore import answer
 from src.config import DEFAULT_TICKERS
 from src.prediction.universe import get_sp500_tickers
 from src.tracking.logger import load_log
+
+BACKEND_LABELS = {
+    "groq": "Powered by Groq (Llama) — real LLM, free tier.",
+    "ollama": "Powered by a local Ollama model — real LLM, fully offline.",
+    None: "Free & local — no external AI API. Set GROQ_API_KEY (see .env.example) for a real LLM.",
+}
 
 WIDGET_KEY = "dumbledore_widget"
 GREETING = (
@@ -63,10 +70,9 @@ def render_floating_widget() -> None:
         st.session_state.dumbledore_messages = [{"role": "assistant", "content": GREETING}]
 
     with st.popover("\U0001F9D9 Ask Dumbledore", key=WIDGET_KEY):
-        st.caption(
-            "Free & local — no external AI API. Explains predictions/accuracy from Niffler's own "
-            "data; won't say when to buy or sell. Tip: write tickers in CAPS, e.g. AAPL."
-        )
+        backend = llm_backend.active_backend()
+        st.caption(BACKEND_LABELS[backend])
+        st.caption("Won't say when to buy or sell. Tip: write tickers in CAPS, e.g. AAPL.")
 
         history_box = st.container(height=320)
         with history_box:
@@ -86,6 +92,7 @@ def render_floating_widget() -> None:
                     get_prediction=get_prediction,
                     load_log=load_log,
                     ml_meta=meta,
+                    llm_generate=llm_backend.generate if backend else None,
                 )
             st.session_state.dumbledore_messages.append({"role": "assistant", "content": reply})
             st.rerun()
