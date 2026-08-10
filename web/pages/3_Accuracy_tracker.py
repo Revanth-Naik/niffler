@@ -95,9 +95,14 @@ fig3.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10), xaxis_title=
 st.plotly_chart(themed_line_layout(fig3), width="stretch")
 
 st.markdown("### Per-ticker track record")
+# "hit" is a nullable boolean column — groupby().agg() with a custom lambda
+# on it silently mis-infers the output dtype for single-row groups (common
+# early on, before much history has accumulated), producing True/False
+# instead of a percentage. Aggregating a plain float copy sidesteps it.
+resolved["hit_numeric"] = resolved["hit"].astype(float)
 per_ticker = resolved.groupby("ticker").agg(
     predictions=("hit", "count"),
-    hit_rate=("hit", lambda s: round(s.mean() * 100, 1)),
+    hit_rate=("hit_numeric", lambda s: round(s.mean() * 100, 1)),
     mean_abs_error=("abs_error", lambda s: round(s.mean(), 2)),
 ).sort_values("hit_rate", ascending=False)
 st.dataframe(

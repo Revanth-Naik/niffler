@@ -36,6 +36,16 @@ def load_log() -> pd.DataFrame:
     log = pd.read_csv(LOG_PATH, parse_dates=["date"], date_format="ISO8601")
     if "source" not in log.columns:
         log["source"] = "heuristic"  # backfill for logs written before the ML model existed
+    if "hit" in log.columns:
+        # A column mixing True/False with blank (unresolved) rows gets read
+        # back as dtype "object", not bool — pandas has no way to represent
+        # NA in a plain bool column. Object-dtype survives .mean() (returns
+        # a real float) but NOT .round() (raises TypeError: Expected
+        # numeric dtype, got object instead) on some pandas versions, which
+        # is what broke the Accuracy tracker page's "hit rate over time"
+        # chart. "boolean" is pandas' nullable bool dtype — it supports NA
+        # natively and behaves numerically everywhere downstream.
+        log["hit"] = log["hit"].astype("boolean")
     return log
 
 

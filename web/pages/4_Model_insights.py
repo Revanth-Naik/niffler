@@ -112,9 +112,15 @@ if resolved.empty or "source" not in resolved.columns or resolved["source"].nuni
         "after this model was trained, this section will compare them head to head."
     )
 else:
+    # See the matching comment in 3_Accuracy_tracker.py: groupby().agg()
+    # with a custom lambda on the nullable-boolean "hit" column mis-infers
+    # the output dtype for single-row groups, returning True/False instead
+    # of a percentage. Aggregating a plain float copy avoids it.
+    resolved = resolved.copy()
+    resolved["hit_numeric"] = resolved["hit"].astype(float)
     by_source = resolved.groupby("source").agg(
         predictions=("hit", "count"),
-        hit_rate=("hit", lambda s: round(s.mean() * 100, 1)),
+        hit_rate=("hit_numeric", lambda s: round(s.mean() * 100, 1)),
     )
     st.dataframe(
         by_source.rename(columns={"predictions": "Predictions", "hit_rate": "Hit rate %"}),
