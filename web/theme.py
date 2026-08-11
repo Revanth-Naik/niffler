@@ -107,9 +107,21 @@ def inject_css() -> None:
     )
 
 
+SHOWCASE_URL = "https://github.com/Revanth-Naik/niffler-showcase"
+
+
 def render_header(tagline: str = "the hoard knows before the bell rings") -> None:
     st.markdown('<div class="niffler-wordmark">NIFFLER</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="niffler-tagline">{tagline}</div>', unsafe_allow_html=True)
+    # The Streamlit toolbar's built-in GitHub icon links to the actual
+    # deployment source repo, which is private — that link 404s for
+    # visitors and can't be redirected (it's wired to the deployment
+    # config, not app code). This sidebar link is the real, working one.
+    st.sidebar.markdown(
+        f'<a href="{SHOWCASE_URL}" target="_blank" style="font-size:12px; color:{GOLD}; '
+        f'text-decoration:none;">&#8599; View project on GitHub</a>',
+        unsafe_allow_html=True,
+    )
 
 
 def render_prediction_card(ticker: str, price: float, predicted_pct: float, confidence: int, rationale: str = "", source: str = "") -> str:
