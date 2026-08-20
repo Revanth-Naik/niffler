@@ -24,7 +24,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python scripts/train_model.py --limit 40 --period 1y
+      - run: python scripts/train_model.py --limit 50 --period 2y
 
       - name: Commit and push if the model changed
         run: |

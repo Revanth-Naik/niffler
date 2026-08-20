@@ -209,7 +209,7 @@ repo so the live Streamlit Cloud app picks them up automatically:
 |---|---|---|
 | `predict.yml` | 13:00, Mon–Fri | `run_predictions.py` |
 | `resolve.yml` | 21:30, Mon–Fri | `record_actuals.py` |
-| `retrain.yml` | 12:00, Sunday | `train_model.py --limit 40 --period 1y` |
+| `retrain.yml` | 12:00, Sunday | `train_model.py --limit 50 --period 2y` |
 
 Each job installs dependencies, runs its script, and — only if the output
 actually changed — commits and pushes using the repo's built-in
