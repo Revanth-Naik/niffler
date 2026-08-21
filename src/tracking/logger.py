@@ -134,7 +134,16 @@ def record_actuals(actual_closes: dict[tuple[str, date_cls], float]) -> int:
         prev_close = log.at[idx, "prev_close"]
         actual_close = actual_closes[key]
         actual_pct = round(((actual_close - prev_close) / prev_close) * 100, 2) if prev_close else None
-        actual_direction = "up" if actual_pct and actual_pct > 0.05 else "down" if actual_pct and actual_pct < -0.05 else "flat"
+        # Graded up/down only, sign-based (ties go up) — matches
+        # prediction/model.py. A +/-0.05% "flat" band used to sit between
+        # up and down, but real trading days almost never close within a
+        # hair of the previous close (only 11% of 55 logged days did),
+        # while the heuristic's own predictions clustered tightly enough
+        # around zero that "flat" got assigned 42% of the time — so that
+        # bucket was manufacturing misses (only 1 of 23 flat predictions
+        # actually matched a flat outcome) rather than measuring real
+        # accuracy. See the matching note in prediction/model.py.
+        actual_direction = "up" if actual_pct is not None and actual_pct >= 0 else "down"
         predicted_direction = log.at[idx, "predicted_direction"]
 
         log.at[idx, "actual_close"] = actual_close
