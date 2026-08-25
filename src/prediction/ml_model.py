@@ -55,7 +55,15 @@ def predict_next_session_ml(df: pd.DataFrame, model=None, meta: dict | None = No
     z = abs(predicted_pct) / max(residual_std, 0.01)
     confidence = int(np.clip(40 + z * 20, 10, 95))
 
-    direction = "up" if predicted_pct > 0.05 else "down" if predicted_pct < -0.05 else "flat"
+    # Sign-based up/down only, no "flat" bucket — matches prediction/model.py
+    # and tracking/logger.py. This ML path is where nearly all live
+    # predictions actually come from once a trained model exists, so this
+    # copy of the old +/-0.05% flat threshold was the real reason the fix
+    # committed earlier didn't show up in production: that fix only patched
+    # the heuristic's own predict_next_session(), which the app stops using
+    # as soon as a trained model is available. See the longer note in
+    # prediction/model.py and tracking/logger.py for the full reasoning.
+    direction = "up" if predicted_pct >= 0 else "down"
 
     holdout = meta.get("holdout_metrics", {})
     ml_hit_rate = holdout.get("ml_hit_rate")
