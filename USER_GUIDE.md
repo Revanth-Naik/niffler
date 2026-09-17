@@ -103,7 +103,10 @@ Three automated jobs, running on GitHub Actions (not a laptop that has to
 stay on), keep the whole thing current with zero manual work:
 
 1. **Every weekday morning, before the market opens** — log a prediction
-   for each tracked ticker.
+   for around 100 large-cap tickers (a curated list, not just the five on
+   the home page — see `src/config.py`'s `TRACKED_TICKERS`), skipping
+   automatically on days the market's actually closed (holidays, not just
+   weekends).
 2. **Every weekday evening, after the market closes** — check what
    actually happened and grade the morning's predictions.
 3. **Every Sunday** — retrain the AI model on everything that's
@@ -112,6 +115,11 @@ stay on), keep the whole thing current with zero manual work:
 
 If a check-in ever gets missed (an outage, a bug), the next successful run
 catches up on anything still pending — nothing gets permanently skipped.
+The one exception is a prediction logged for a day the market was never
+actually open (which can no longer happen, but could for a handful of
+predictions logged before this was fixed) — there's no closing price that
+will ever exist for a day with no trading session, so those get dropped
+rather than left stuck forever.
 
 ## Reading the numbers honestly
 
