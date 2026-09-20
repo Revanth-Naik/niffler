@@ -1,5 +1,5 @@
 {
-  "trained_at": "2026-09-13T15:27:44.833801+00:00",
+  "trained_at": "2026-09-20T15:16:09.636078+00:00",
   "tickers_used": [
     "AAPL",
     "MSFT",
@@ -56,24 +56,24 @@
   "n_test_samples": 4420,
   "period": "2y",
   "synthetic": false,
-  "residual_std": 2.4113416363558344,
+  "residual_std": 2.5009986959227715,
   "feature_importances": {
-    "momentum_5_20": 0.1104,
-    "momentum_10_50": 0.1122,
-    "rsi_14": 0.0759,
-    "macd": 0.0321,
-    "macd_signal": 0.0355,
-    "volatility_10": 0.1106,
-    "volume_trend": 0.0844,
-    "return_1d": 0.1832,
-    "return_5d": 0.2229,
-    "heuristic_pred_pct": 0.0298,
-    "heuristic_confidence": 0.0031
+    "momentum_5_20": 0.115,
+    "momentum_10_50": 0.1319,
+    "rsi_14": 0.086,
+    "macd": 0.0332,
+    "macd_signal": 0.0275,
+    "volatility_10": 0.1085,
+    "volume_trend": 0.0769,
+    "return_1d": 0.1721,
+    "return_5d": 0.2185,
+    "heuristic_pred_pct": 0.0286,
+    "heuristic_confidence": 0.0017
   },
   "holdout_metrics": {
-    "ml_mae": 1.6418,
-    "ml_hit_rate": 50.8,
-    "heuristic_mae": 2.1773,
-    "heuristic_hit_rate": 48.9
+    "ml_mae": 1.6664,
+    "ml_hit_rate": 50.5,
+    "heuristic_mae": 2.1695,
+    "heuristic_hit_rate": 48.5
   }
 }
