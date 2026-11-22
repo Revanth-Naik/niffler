@@ -1,5 +1,5 @@
 {
-  "trained_at": "2026-11-15T18:22:03.423732+00:00",
+  "trained_at": "2026-11-22T18:56:09.959722+00:00",
   "tickers_used": [
     "AAPL",
     "MSFT",
@@ -56,24 +56,24 @@
   "n_test_samples": 4420,
   "period": "2y",
   "synthetic": false,
-  "residual_std": 2.2668550211782974,
+  "residual_std": 2.3071807500960957,
   "feature_importances": {
-    "momentum_5_20": 0.1214,
-    "momentum_10_50": 0.1224,
-    "rsi_14": 0.0821,
-    "macd": 0.0459,
-    "macd_signal": 0.0458,
-    "volatility_10": 0.1427,
-    "volume_trend": 0.0709,
-    "return_1d": 0.1683,
-    "return_5d": 0.1771,
+    "momentum_5_20": 0.1114,
+    "momentum_10_50": 0.1247,
+    "rsi_14": 0.0739,
+    "macd": 0.0624,
+    "macd_signal": 0.0498,
+    "volatility_10": 0.1343,
+    "volume_trend": 0.0542,
+    "return_1d": 0.1749,
+    "return_5d": 0.188,
     "heuristic_pred_pct": 0.0197,
-    "heuristic_confidence": 0.0039
+    "heuristic_confidence": 0.0067
   },
   "holdout_metrics": {
-    "ml_mae": 1.529,
-    "ml_hit_rate": 51.1,
-    "heuristic_mae": 2.0785,
+    "ml_mae": 1.5511,
+    "ml_hit_rate": 50.9,
+    "heuristic_mae": 2.0845,
     "heuristic_hit_rate": 49.8
   }
 }
